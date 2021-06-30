@@ -5,3 +5,13 @@ html
 {
     scroll-behavior: smooth;
 }
+
+.fontsize54
+{
+    font-size: 54pt;
+}
+
+.fontsize18
+{
+    font-size: 18pt;
+}
