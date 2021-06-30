@@ -1,1 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* em todo HTML, toda vez que abaixar a tela (scroll), sera de forma suave   */
+html
+{
+    scroll-behavior: smooth;
+}
