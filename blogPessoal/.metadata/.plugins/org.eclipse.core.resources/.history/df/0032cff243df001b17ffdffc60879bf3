@@ -1,0 +1,97 @@
+package com.generation.blogPessoal.controller;
+
+import java.util.Optional;
+
+import javax.validation.Valid;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.generation.blogPessoal.model.UserLoginModel;
+import com.generation.blogPessoal.model.UsuarioModel;
+import com.generation.blogPessoal.repository.UsuarioRepository;
+import com.generation.blogPessoal.service.UsuarioService;
+
+@RestController
+@RequestMapping ("/usuarios")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
+public class UsuarioController 
+{
+	//
+	//
+	//
+	@Autowired
+	private UsuarioService usuarioService;
+	
+	private @Autowired UsuarioRepository repositorio;
+	
+	@PostMapping("/logar")
+	public ResponseEntity<UserLoginModel> Autentication (@RequestBody Optional<UserLoginModel> user)
+	{
+		return usuarioService.Logar(user).map(resposta -> ResponseEntity.ok(resposta))
+				.orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+	}
+	
+	@GetMapping ("/{id}")
+	public ResponseEntity<UsuarioModel> GetById(@PathVariable long id)
+	{
+		return repositorio.findByIdUser(id).map(resposta -> ResponseEntity.ok(resposta))
+				.orElse(ResponseEntity.notFound().build());
+	}
+	
+	@PostMapping ("/cadastrar")
+	public ResponseEntity<UsuarioModel> Post (@RequestBody UsuarioModel usuario)
+	{
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(usuarioService.CadastrarUsuario(usuario));
+	}
+	
+	@GetMapping("/todos")
+	public ResponseEntity<List<UsuarioModel>> pegarTodos(){
+		List<UsuarioModel> listaDeUsuario = repositorio.findAll();
+		if (!listaDeUsuario.isEmpty()) {
+			return ResponseEntity.status(200).body(listaDeUsuario);
+		} else {			
+			return ResponseEntity.status(204).build();
+		}
+	}
+	
+	@PostMapping("/salvar")
+	public ResponseEntity<Object> salvarUsuario(@Valid @RequestBody UsuarioModel novoUsuario){
+		return repositorio.findByUsuario(novoUsuario.getUsuario())
+				.map(usuarioExistente -> {
+					return ResponseEntity.status(400).build();
+				})
+				.orElseGet(() -> {
+					BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+					String senhaCriptografada = encoder.encode(novoUsuario.getSenha());
+					novoUsuario.setSenha(senhaCriptografada);
+					return ResponseEntity.status(201).body(repositorio.save(novoUsuario));
+				});
+	}
+	
+	@PutMapping("/alterar")
+	public ResponseEntity<?> alterarUsuario(@Valid @RequestBody UsuarioModel usuarioParaAtualizar){
+		return repositorio.findByUsuario(usuarioParaAtualizar.getUsuario())
+				.map(usuarioExistente -> {
+					BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+					String senhaCriptografada = encoder.encode(usuarioParaAtualizar.getSenha());
+					usuarioExistente.setSenha(senhaCriptografada);
+					return ResponseEntity.status(201).body(repositorio.save(usuarioExistente));
+				})
+				.orElse(ResponseEntity.status(400).build());
+	}
+
+}

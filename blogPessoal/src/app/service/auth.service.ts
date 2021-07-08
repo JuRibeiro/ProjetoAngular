@@ -27,6 +27,11 @@ export class AuthService {
     return this.http.post<usuario> ('http://localhost:8080/usuarios/cadastrar', usuario)
   }
 
+  getByIdUser(id: number) : Observable<usuario>
+  {
+    return this.http.get<usuario>(`http://localhost:8080/usuarios/${id}`)
+  }
+
   //metodo para mostar navbar e rodape
   logado()
   {
